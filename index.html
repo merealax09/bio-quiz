@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizMaster - Bio Protocol Quiz</title>
+  <style>
+    /* existing CSS ... */
+
+    .creator {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: #444;
+    }
+    .creator a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .creator a:hover {
+        text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🧬 Bio Protocol Quiz</div>
+      <div class="subtitle">Test Your DeSci Knowledge</div>
+      <div class="creator">
+        Created by <a href="https://x.com/AgentxN1" target="_blank">@AgentxN1</a>
+      </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="quiz-section active start-screen">
+      <h2>Welcome to the Bio Protocol Quiz!</h2>
+      <p>Test your knowledge about Bio Protocol, its ecosystem, and its mission in decentralized science (DeSci).</p>
+      <div class="buttons">
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+      </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="quiz-section">
+      <div class="question-counter">
+        <span id="current-question">1</span> of <span id="total-questions">10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="question">
+        <h3 id="question-text"></h3>
+        <div class="options" id="options-container"></div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="buttons">
+        <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="quiz-section results-screen">
+      <h2>Quiz Complete!</h2>
+      <div class="score-circle" id="score-circle">
+        <div id="score-percentage">0%</div>
+        <div class="score-text">Score</div>
+      </div>
+      <div class="results-message" id="results-message"></div>
+      <div class="results-breakdown">
+        <div class="breakdown-item">
+          <span>Correct Answers:</span>
+          <strong id="correct-count">0</strong>
+        </div>
+        <div class="breakdown-item">
+          <span>Incorrect Answers:</span>
+          <strong id="incorrect-count">0</strong>
+        </div>
+        <div class="breakdown-item">
+          <span>Total Questions:</span>
+          <strong id="total-count">0</strong>
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="btn" onclick="restartQuiz()">Take Quiz Again</button>
+        <button class="btn" onclick="shareOnTwitter()">Share on Twitter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // quizData = [ ... your Bio Protocol quiz questions here ... ]
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedOption = -1;
+    let quizCompleted = false;
+
+    function startQuiz() {
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        document.getElementById('total-questions').textContent = quizData.length;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQuestion >= quizData.length) {
+            showResults();
+            return;
+        }
+
+        const question = quizData[currentQuestion];
+        document.getElementById('current-question').textContent = currentQuestion + 1;
+        document.getElementById('question-text').textContent = question.question;
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+
+        question.options.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'option';
+            optionElement.textContent = option;
+            optionElement.onclick = () => selectOption(index);
+            optionsContainer.appendChild(optionElement);
+        });
+
+        const progress = ((currentQuestion) / quizData.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + '%';
+
+        selectedOption = -1;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('feedback').className = 'feedback';
+    }
+
+    function selectOption(index) {
+        if (selectedOption !== -1) return;
+
+        selectedOption = index;
+        const options = document.querySelectorAll('.option');
+        const question = quizData[currentQuestion];
+
+        options.forEach((option, i) => {
+            if (i === question.correct) {
+                option.classList.add('correct');
+            } else if (i === selectedOption && i !== question.correct) {
+                option.classList.add('incorrect');
+            }
+            option.style.pointerEvents = 'none';
+        });
+
+        const feedback = document.getElementById('feedback');
+        if (selectedOption === question.correct) {
+            score++;
+            feedback.textContent = '🎉 Correct! Well done!';
+            feedback.className = 'feedback correct';
+        } else {
+            feedback.textContent = `❌ Incorrect. The correct answer is: ${question.options[question.correct]}`;
+            feedback.className = 'feedback incorrect';
+        }
+
+        feedback.style.display = 'block';
+        document.getElementById('next-btn').disabled = false;
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        setTimeout(loadQuestion, 300);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('results-screen').classList.add('active');
+
+        const percentage = Math.round((score / quizData.length) * 100);
+        const scoreCircle = document.getElementById('score-circle');
+
+        document.getElementById('score-percentage').textContent = percentage + '%';
+        document.getElementById('correct-count').textContent = score;
+        document.getElementById('incorrect-count').textContent = quizData.length - score;
+        document.getElementById('total-count').textContent = quizData.length;
+
+        let message = '';
+        if (percentage >= 80) {
+            scoreCircle.className = 'score-circle excellent';
+            message = '🏆 Excellent! You\'re a Bio Protocol expert!';
+        } else if (percentage >= 60) {
+            scoreCircle.className = 'score-circle good';
+            message = '👏 Good job! You know Bio Protocol pretty well!';
+        } else if (percentage >= 40) {
+            scoreCircle.className = 'score-circle average';
+            message = '👍 Not bad! Keep learning about Bio Protocol!';
+        } else {
+            scoreCircle.className = 'score-circle poor';
+            message = '💪 Don\'t give up! Dive deeper into Bio Protocol and try again!';
+        }
+
+        document.getElementById('results-message').textContent = message;
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        selectedOption = -1;
+        document.getElementById('results-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+
+    // NEW - Share on Twitter with auto-detected site URL + hashtags
+    function shareOnTwitter() {
+        const percentage = Math.round((score / quizData.length) * 100);
+        const websiteURL = window.location.href; // auto-detects site link
+        const text = `I scored ${percentage}% (${score}/${quizData.length}) on the Bio Protocol Quiz! 🧬🔥\n\nTest your knowledge here: ${websiteURL}\n\nCreated by @AgentxN1 #DeSci #BioProtocol`;
+        
+        const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+        window.open(url, "_blank");
+    }
+  </script>
+</body>
+</html>
